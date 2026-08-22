@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JKJF Job Hunt - Login</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root {
+    --primary: #2563EB;
+    --secondary: #0D9488;
+    --accent: #F59E0B;
+    --bg: #F4F5F7;
+    --text: #1E293B;
+    --card: #FFFFFF;
+    --border: #E2E8F0;
+    --hover-bg: #E2E8F0;
+    --switch-bg: #CBD5E1;
+    --btn-bg: #E2E8F0;
+    --header-glass: rgba(255, 255, 255, 0.82);
+  }
+
+  [data-theme="dark"] {
+    --primary: #3B82F6;
+    --secondary: #14B8A6;
+    --accent: #FBBF24;
+    --bg: #070C1B;
+    --text: #F1F5F9;
+    --card: #101A30;
+    --border: #16223C;
+    --hover-bg: #16223C;
+    --switch-bg: #2C3B5C;
+    --btn-bg: #16223C;
+    --header-glass: rgba(10, 16, 33, 0.82);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.3s, color 0.3s;
+    min-height: 100vh;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  nav {
+    background: transparent;
+    color: var(--text);
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid transparent;
+    transition: background-color 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease;
+  }
+
+  nav.scrolled {
+    background-color: var(--header-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 23px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.03em;
+  }
+
+  .logo .dot { color: var(--accent); }
+
+  .burger {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--btn-bg);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    transition: background 0.2s;
+  }
+
+  .burger:hover {
+    background: var(--hover-bg);
+  }
+
+  .burger svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 300px;
+    height: 100%;
+    background: var(--card);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+    transition: left 0.3s ease;
+    padding: 30px 20px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sidebar.active { left: 0; }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: transparent;
+    color: var(--text);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s ease;
+    width: 100%;
+    text-align: left;
+  }
+
+  .menu-item:hover {
+    background: var(--hover-bg);
+  }
+
+  .menu-item svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--switch-bg);
+    transition: .3s;
+    border-radius: 24px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: var(--primary);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 150;
+  }
+  .overlay.active { display: block; }
+
+  .container { padding: 20px; max-width: 1100px; margin: auto; }
+
+  .form-box {
+    background: var(--card);
+    padding: 35px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    max-width: 420px;
+    margin: 40px auto;
+    border: 1px solid var(--border);
+  }
+  .form-tabs {
+    display: flex;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 15px;
+    opacity: 0.6;
+  }
+  .tab.active {
+    opacity: 1;
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+  }
+  .form-box input {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    font-size: 15px;
+  }
+  .form-box input:focus {
+    border-color: var(--primary);
+  }
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 15px;
+    margin-top: 12px;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .btn:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+  .error { color: #ef4444; text-align: center; margin-top: 12px; font-size: 14px; display: none; }
+  .info { color: var(--secondary); text-align: center; margin-top: 12px; font-size: 14px; display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="siteNav">
+  <div class="nav-left">
+    <button class="burger" onclick="toggleSidebar()" aria-label="Toggle navigation menu">
+      <svg viewBox="0 0 24 24">
+        <line x1="4" y1="7" x2="20" y2="7"></line>
+        <line x1="4" y1="12" x2="20" y2="12"></line>
+        <line x1="4" y1="17" x2="20" y2="17"></line>
+      </svg>
+    </button>
+    <div class="logo">JKJF<span class="dot">.</span></div>
+  </div>
+</nav>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <button class="menu-item" onclick="shareApp()">
+    <span>Share Page</span>
+    <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+  </button>
+
+  <label class="menu-item">
+    <span>Dark Mode</span>
+    <span class="switch">
+      <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+      <span class="slider"></span>
+    </span>
+  </label>
+
+  <a class="menu-item" href="mailto:jkjfofficial@gmail.com?subject=Feedback%20JKJF%20Job%20Hunt&body=Hi%20JKJF%20Team,%0A%0A" target="_blank">
+    <span>Contact / Feedback</span>
+    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+  </a>
+</div>
+
+<div class="container">
+  <div class="form-box">
+    <div class="form-tabs">
+      <button class="tab active" onclick="switchTab('login')">LOGIN</button>
+      <button class="tab" onclick="switchTab('signup')">SIGN UP</button>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <input type="email" id="loginEmail" placeholder="Email" required>
+      <input type="password" id="loginPass" placeholder="Password" required>
+      <button type="submit" class="btn" id="loginBtn">LOGIN</button>
+      <p id="loginError" class="error"></p>
+    </form>
+
+    <form id="signupForm" style="display:none;" onsubmit="handleSignup(event)">
+      <input type="email" id="signupEmail" placeholder="Email" required>
+      <input type="password" id="signupPass" placeholder="Create Password (6+ characters)" required>
+      <button type="submit" class="btn" id="signupBtn">SIGN UP</button>
+      <p id="signupError" class="error"></p>
+      <p id="signupInfo" class="info"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://zemxezibfcogzkhvjrxn.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplbXhlemliZmNvZ3praHZqcnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNDQ2MzYsImV4cCI6MjEwMTkyMDYzNn0.fKRfqa57unFDrWvGvt7qPQ3-WBYuC0f36J-GI1X8cIQ";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const NEXT_PAGE_URL = "chooserole.html";
+
+  (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) window.location.href = NEXT_PAGE_URL;
+  })();
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+    document.getElementById('overlay').classList.toggle('active');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.getElementById('sidebar').classList.remove('active');
+      document.getElementById('overlay').classList.remove('active');
+    }
+  });
+
+  /* THEME: honors system light/dark by default, but remembers a manual choice */
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.body.setAttribute('data-theme', 'dark');
+    } else {
+      document.body.removeAttribute('data-theme');
+    }
+    document.getElementById('themeToggle').checked = (theme === 'dark');
+  }
+
+  function toggleTheme() {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    localStorage.setItem('theme', newTheme);
+    applyTheme(newTheme);
+  }
+
+  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+  const storedTheme = localStorage.getItem('theme');
+  applyTheme(storedTheme || (systemPrefersDark.matches ? 'dark' : 'light'));
+
+  systemPrefersDark.addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+      applyTheme(e.matches ? 'dark' : 'light');
+    }
+  });
+
+  /* Header divider line — appears once you scroll past the top */
+  const siteNav = document.getElementById('siteNav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 12) siteNav.classList.add('scrolled');
+    else siteNav.classList.remove('scrolled');
+  }, { passive: true });
+
+  function shareApp() {
+    const shareUrl = window.location.origin;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert('Link copied to clipboard!\n' + shareUrl);
+    }).catch(() => {
+      alert('Share link: ' + shareUrl);
+    });
+    toggleSidebar();
+  }
+
+  function switchTab(tab) {
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t => t.classList.remove('active'));
+
+    if (tab === 'login') {
+      tabs[0].classList.add('active');
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('signupForm').style.display = 'none';
+    } else {
+      tabs[1].classList.add('active');
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'block';
+    }
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const loginBtn = document.getElementById('loginBtn');
+    const errorEl = document.getElementById('loginError');
+    errorEl.style.display = 'none';
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value;
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'LOGGING IN...';
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'LOGIN';
+
+    if (error) {
+      errorEl.textContent = error.message;
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    window.location.href = NEXT_PAGE_URL;
+  }
+
+  async function handleSignup(e) {
+    e.preventDefault();
+    const signupBtn = document.getElementById('signupBtn');
+    const errorEl = document.getElementById('signupError');
+    const infoEl = document.getElementById('signupInfo');
+    errorEl.style.display = 'none';
+    infoEl.style.display = 'none';
+
+    const email = document.getElementById('signupEmail').value.trim();
+    const pass = document.getElementById('signupPass').value;
+
+    signupBtn.disabled = true;
+    signupBtn.textContent = 'SIGNING UP...';
+
+    const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
+
+    signupBtn.disabled = false;
+    signupBtn.textContent = 'SIGN UP';
+
+    if (error) {
+      errorEl.textContent = error.message;
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    if (!data.session) {
+      infoEl.textContent = 'Account created! Check your email to confirm, then log in.';
+      infoEl.style.display = 'block';
+      switchTab('login');
+      document.getElementById('signupForm').reset();
+      return;
+    }
+
+    window.location.href = NEXT_PAGE_URL;
+  }
+</script>
+
+</body>
+</html>

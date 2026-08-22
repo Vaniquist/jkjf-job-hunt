@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JKJF Job Hunt - Find Personnel</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+    :root {
+        --primary: #2563EB;
+        --secondary: #0D9488;
+        --accent: #F59E0B;
+        --background: #F4F5F7;
+        --surface: #FFFFFF;
+        --text: #1E293B;
+        --border: #E2E8F0;
+        --shadow: rgba(0, 0, 0, 0.08);
+        --hover-bg: #E2E8F0;
+        --switch-bg: #CBD5E1;
+        --btn-bg: #E2E8F0;
+        --btn-hover: #CBD5E1;
+        --header-glass: rgba(255, 255, 255, 0.82);
+    }
+
+    [data-theme="dark"] {
+        --primary: #3B82F6;
+        --secondary: #14B8A6;
+        --accent: #FBBF24;
+        --background: #070C1B;
+        --surface: #101A30;
+        --text: #F1F5F9;
+        --border: #16223C;
+        --shadow: rgba(0, 0, 0, 0.4);
+        --hover-bg: #16223C;
+        --switch-bg: #2C3B5C;
+        --btn-bg: #16223C;
+        --btn-hover: #2C3B5C;
+        --header-glass: rgba(7, 12, 27, 0.82);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+        background-color: var(--background);
+        color: var(--text);
+        padding-top: 80px;
+        min-height: 100vh;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 64px;
+        background-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1.5rem;
+        z-index: 1000;
+        border-bottom: 1px solid transparent;
+        transition: background-color 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease;
+    }
+
+    header.scrolled {
+        background-color: var(--header-glass);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+    }
+
+    .site-name {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.03em;
+        text-decoration: none;
+    }
+
+    .site-name .dot {
+        color: var(--accent);
+        font-size: 1.5rem;
+    }
+
+    .burger-btn {
+        width: 42px;
+        height: 42px;
+        background-color: var(--btn-bg);
+        border: none;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text);
+        transition: background-color 0.2s ease;
+    }
+
+    .burger-btn:hover {
+        background-color: var(--btn-hover);
+    }
+
+    .burger-btn svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-btn {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: #fff;
+        border: none;
+        padding: 0.55rem 1rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .header-btn:hover {
+        opacity: 0.92;
+        transform: translateY(-1px);
+    }
+
+    .user-pill {
+        font-size: 0.8rem;
+        color: var(--text);
+        opacity: 0.8;
+        display: none;
+    }
+
+    .menu-drawer {
+        position: fixed;
+        top: 0;
+        left: -300px;
+        width: 300px;
+        height: 100%;
+        background-color: var(--surface);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        padding: 40px 20px;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .menu-drawer.open {
+        left: 0;
+    }
+
+    .drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1500;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .drawer-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .menu-items {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .menu-item {
+        padding: 14px 16px;
+        color: var(--text);
+        text-decoration: none;
+        background: none;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        border-radius: 12px;
+        transition: background 0.2s ease;
+    }
+
+    .menu-item:hover {
+        background-color: var(--hover-bg);
+    }
+
+    .menu-item svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: var(--switch-bg);
+        transition: .3s;
+        border-radius: 24px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+
+    main {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem;
+    }
+
+    .nav-switch {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .nav-tab {
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .nav-tab.active {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: #fff;
+    }
+
+    .nav-tab:not(.active) {
+        background-color: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+    }
+
+    .section-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.5rem;
+        margin-bottom: 1.2rem;
+        color: var(--text);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 0.3rem;
+        display: inline-block;
+    }
+
+    .card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .card {
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.2rem;
+        display: flex;
+        gap: 1rem;
+        cursor: pointer;
+        box-shadow: 0 4px 6px -1px var(--shadow);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+    }
+
+    .card-image-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .card-image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .card-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .card-title { font-size: 1.1rem; font-weight: 600; }
+    .card-subtitle { font-size: 0.9rem; color: var(--secondary); font-weight: 500; }
+    .card-desc {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .card-owner-tag {
+        font-size: 0.7rem;
+        color: var(--accent);
+        font-weight: 700;
+        margin-top: 2px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        opacity: 0.7;
+        font-size: 0.9rem;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+        padding: 1rem;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        max-width: 500px;
+        width: 100%;
+        padding: 1.75rem;
+        position: relative;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px -8px var(--shadow);
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1.1rem;
+        right: 1.1rem;
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--btn-bg);
+        border: none;
+        border-radius: 50%;
+        font-size: 1.3rem;
+        line-height: 1;
+        color: var(--text);
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        z-index: 1;
+    }
+
+    .modal-close:hover {
+        background-color: var(--btn-hover);
+    }
+
+    .modal-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem; padding-right: 1.5rem; }
+    .modal-content > h3 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 1.4rem !important;
+        padding-right: 1.5rem;
+    }
+    .modal-btn {
+        margin-top: 1.4rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: #ffffff;
+        border: none;
+        padding: 0.9rem 1rem;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        box-shadow: 0 8px 16px -6px rgba(37, 99, 235, 0.45);
+        transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .modal-btn:hover {
+        opacity: 0.95;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px -6px rgba(37, 99, 235, 0.55);
+    }
+
+    .modal-btn:active {
+        transform: translateY(0);
+    }
+
+    .modal-btn:disabled {
+        opacity: 0.6;
+        cursor: default;
+        transform: none;
+    }
+
+    .modal-btn-danger {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        box-shadow: 0 8px 16px -6px rgba(220, 38, 38, 0.45);
+        margin-top: 0.75rem;
+    }
+
+    .modal-btn-danger:hover {
+        box-shadow: 0 10px 20px -6px rgba(220, 38, 38, 0.55);
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.3rem;
+    }
+
+    .form-group label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--secondary);
+        opacity: 1;
+    }
+
+    .form-group input[type="text"],
+    .form-group textarea {
+        padding: 0.95rem 1.05rem;
+        border-radius: 14px;
+        border: 1.5px solid var(--border);
+        background-color: var(--background);
+        color: var(--text);
+        font-size: 0.95rem;
+        width: 100%;
+    }
+
+    .form-group input[type="text"]:hover,
+    .form-group textarea:hover {
+        border-color: var(--switch-bg);
+    }
+
+    .form-group input[type="text"]:focus,
+    .form-group textarea:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+    }
+
+    .form-group textarea {
+        min-height: 90px;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    .form-hint {
+        font-size: 0.75rem;
+        opacity: 0.6;
+    }
+
+    .form-error {
+        color: #EF4444;
+        font-size: 0.8rem;
+        margin-top: 0.4rem;
+        display: none;
+    }
+
+    /* Material-style file upload dropzone, replacing the native
+       "Choose File" control with something that actually matches
+       the rest of the UI, and shows a live preview once picked. */
+    .file-drop {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 0.9rem 1rem;
+        border-radius: 16px;
+        border: 1.5px dashed var(--border);
+        background-color: var(--background);
+        cursor: pointer;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .file-drop:hover,
+    .file-drop.dragover {
+        border-color: var(--accent);
+        background-color: var(--hover-bg);
+    }
+
+    .file-drop input[type="file"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .file-drop-thumb {
+        flex-shrink: 0;
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        color: #fff;
+    }
+
+    .file-drop-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+    }
+
+    .file-drop-thumb svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .file-drop-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+    }
+
+    .file-drop-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .file-drop-sub {
+        font-size: 0.75rem;
+        opacity: 0.6;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; animation: none !important; }
+    }
+</style>
+</head>
+<body>
+<header id="siteHeader">
+    <div class="header-left">
+        <button class="burger-btn" id="burgerBtn" aria-label="Toggle Menu">
+            <svg viewBox="0 0 24 24">
+                <line x1="4" y1="7" x2="20" y2="7"></line>
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="4" y1="17" x2="20" y2="17"></line>
+            </svg>
+        </button>
+        <a href="chooserole.html" class="site-name">JKJF Job Hunt<span class="dot">.</span></a>
+    </div>
+
+    <div class="header-right">
+        <span class="user-pill" id="userPill"></span>
+        <button class="header-btn" id="postProfileBtn" style="display:none;">Post My Profile</button>
+        <button class="header-btn" id="postJobLinkBtn" style="display:none;">Post a Job</button>
+    </div>
+</header>
+
+<nav class="menu-drawer" id="menuDrawer">
+    <ul class="menu-items">
+        <li>
+            <button class="menu-item" id="shareBtn">
+                <span>Share Page</span>
+                <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </button>
+        </li>
+        <li>
+            <label class="menu-item">
+                <span>Dark Mode</span>
+                <span class="switch">
+                    <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                    <span class="slider"></span>
+                </span>
+            </label>
+        </li>
+        <li>
+            <a href="chooserole.html" class="menu-item">
+                <span>Switch Role</span>
+                <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            </a>
+        </li>
+        <li>
+            <a href="mailto:jkjfofficial@gmail.com?subject=Inquiry/Feedback" class="menu-item">
+                <span>Contact / Feedback</span>
+                <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </a>
+        </li>
+        <li>
+            <button class="menu-item" id="logoutBtn">
+                <span>Log Out</span>
+                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            </button>
+        </li>
+    </ul>
+</nav>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<main>
+    <div class="nav-switch">
+        <a href="jobs.html" class="nav-tab">Job Listings</a>
+        <a href="personnel.html" class="nav-tab active">Find Personnel</a>
+    </div>
+    <h2 class="section-title">Available Talent</h2>
+    <div class="card-list" id="personnelListings">
+        <div class="empty-state">Loading candidates…</div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+        <button class="modal-close" data-close="detailModal">&times;</button>
+        <div class="modal-header">
+            <div class="card-image-box" id="modalImgBox"></div>
+            <div>
+                <h3 id="modalTitle"></h3>
+                <div id="modalSubtitle" style="color: var(--secondary);"></div>
+            </div>
+        </div>
+        <div class="modal-body" id="modalBody" style="display: flex; flex-direction: column; gap: 0.8rem;"></div>
+        <button class="modal-btn" id="modalContactBtn">Contact Candidate</button>
+        <button class="modal-btn modal-btn-danger" id="modalDeleteBtn" style="display:none;">Delete My Profile</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="postProfileModal">
+    <div class="modal-content">
+        <button class="modal-close" data-close="postProfileModal">&times;</button>
+        <h3 style="margin-bottom: 1rem;" id="postProfileHeading">Post My Profile</h3>
+
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="pName" placeholder="Full name">
+        </div>
+        <div class="form-group">
+            <label>Profession</label>
+            <input type="text" id="pProfession" placeholder="Current role or title">
+        </div>
+        <div class="form-group">
+            <label>Experience</label>
+            <input type="text" id="pExperience" placeholder="Years of experience">
+        </div>
+        <div class="form-group">
+            <label>Skills</label>
+            <input type="text" id="pSkills" placeholder="Skills, separated by commas">
+        </div>
+        <div class="form-group">
+            <label>Bio</label>
+            <textarea id="pBio" placeholder="A short summary employers will see"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Profile Photo (optional)</label>
+            <div class="file-drop" id="pAvatarDrop">
+                <input type="file" id="pAvatar" accept="image/*">
+                <div class="file-drop-thumb" id="pAvatarThumb">
+                    <img id="pAvatarThumbImg" alt="">
+                    <svg id="pAvatarThumbIcon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div class="file-drop-copy">
+                    <div class="file-drop-title" id="pAvatarTitle">Upload a photo</div>
+                    <div class="file-drop-sub" id="pAvatarSub">JPG or PNG, up to 5MB</div>
+                </div>
+            </div>
+        </div>
+        <div class="form-error" id="postProfileError"></div>
+
+        <button class="modal-btn" id="submitProfileBtn">Publish Profile</button>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://zemxezibfcogzkhvjrxn.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplbXhlemliZmNvZ3praHZqcnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNDQ2MzYsImV4cCI6MjEwMTkyMDYzNn0.fKRfqa57unFDrWvGvt7qPQ3-WBYuC0f36J-GI1X8cIQ";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let currentRole = null;
+    let loadedCandidates = [];
+    let modalPersonId = null;
+
+    /* Escapes user-submitted text before it is ever inserted via
+       innerHTML, so a candidate profile can't smuggle in a <script> or
+       onerror= handler that runs in every visitor's browser. */
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    async function requireLogin() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            window.location.href = "login.html";
+            return null;
+        }
+        return session.user;
+    }
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const menuDrawer = document.getElementById('menuDrawer');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const shareBtn = document.getElementById('shareBtn');
+    const personnelListingsContainer = document.getElementById('personnelListings');
+    const postProfileBtn = document.getElementById('postProfileBtn');
+    const postJobLinkBtn = document.getElementById('postJobLinkBtn');
+    const userPill = document.getElementById('userPill');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const postProfileError = document.getElementById('postProfileError');
+    const submitProfileBtn = document.getElementById('submitProfileBtn');
+    const siteHeader = document.getElementById('siteHeader');
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.addEventListener('click', () => closeModal(btn.dataset.close));
+    });
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
+    });
+
+    function toggleDrawer() {
+        menuDrawer.classList.toggle('open');
+        drawerOverlay.classList.toggle('active');
+    }
+    burgerBtn.addEventListener('click', toggleDrawer);
+    drawerOverlay.addEventListener('click', toggleDrawer);
+
+    /* THEME: honors system light/dark by default, but remembers a manual choice */
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+        document.getElementById('themeToggle').checked = (theme === 'dark');
+    }
+
+    function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const newTheme = isDark ? 'light' : 'dark';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
+    }
+
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const storedTheme = localStorage.getItem('theme');
+    applyTheme(storedTheme || (systemPrefersDark.matches ? 'dark' : 'light'));
+
+    systemPrefersDark.addEventListener('change', (e) => {
+        if (!localStorage.getItem('theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+
+    /* Header divider line — appears once you scroll past the top */
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 12) siteHeader.classList.add('scrolled');
+        else siteHeader.classList.remove('scrolled');
+    }, { passive: true });
+
+    shareBtn.addEventListener('click', async () => {
+        if (navigator.share) {
+            try { await navigator.share({ title: 'JKJF Job Hunt - Personnel', url: window.location.href }); }
+            catch (err) {}
+        } else if (navigator.clipboard) {
+            try { await navigator.clipboard.writeText(window.location.href); alert('URL copied!'); }
+            catch (err) { alert('Could not copy link: Secure context (HTTPS) required.'); }
+        }
+        toggleDrawer();
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+        await supabaseClient.auth.signOut();
+        window.location.href = 'login.html';
+    });
+
+    /* =====================================================================
+       UPLOAD AN IMAGE TO SUPABASE STORAGE
+       Puts the file in the "uploads" bucket under a folder, named with
+       the user's ID so files don't collide, then hands back a public URL
+       to save in the database (the actual image lives in Storage, only
+       the link lives in the table).
+    ===================================================================== */
+    async function uploadImage(file, folder) {
+        if (!file) return null;
+        if (file.size > 5 * 1024 * 1024) {
+            throw new Error('Image must be under 5MB.');
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${folder}/${currentUser.id}-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabaseClient.storage
+            .from('uploads')
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabaseClient.storage
+            .from('uploads')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    }
+
+    async function refreshAndCacheCandidates() {
+        const { data, error } = await supabaseClient
+            .from('candidates')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            personnelListingsContainer.innerHTML = `<div class="empty-state">Couldn't load candidates: ${error.message}</div>`;
+            return;
+        }
+
+        loadedCandidates = data || [];
+        if (loadedCandidates.length === 0) {
+            personnelListingsContainer.innerHTML = `<div class="empty-state">No candidate profiles yet.</div>`;
+        } else {
+            renderCandidates(loadedCandidates);
+        }
+    }
+
+    function renderCandidates(candidates) {
+        personnelListingsContainer.innerHTML = candidates.map(person => {
+            const initials = (person.name || '?').split(' ').map(n => n[0]).join('').toUpperCase();
+            const imageContent = person.avatar_url
+                ? `<img src="${escapeHtml(person.avatar_url)}" alt="${escapeHtml(person.name)}">`
+                : escapeHtml(initials);
+            const isOwner = currentUser && person.user_id === currentUser.id;
+            return `
+                <div class="card" data-id="${escapeHtml(String(person.id))}">
+                    <div class="card-image-box">${imageContent}</div>
+                    <div class="card-details">
+                        <div class="card-title">${escapeHtml(person.name)}</div>
+                        <div class="card-subtitle">${escapeHtml(person.profession)} • ${escapeHtml(person.experience)}</div>
+                        <div class="card-desc">Skills: ${escapeHtml(person.skills)}</div>
+                        ${isOwner ? '<div class="card-owner-tag">This is you</div>' : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Event delegation instead of inline onclick handlers — avoids ever
+    // building executable markup out of a candidate's id or fields.
+    personnelListingsContainer.addEventListener('click', (e) => {
+        const card = e.target.closest('.card[data-id]');
+        if (card) openPersonnelModal(card.dataset.id);
+    });
+
+    function openPersonnelModal(id) {
+        const person = loadedCandidates.find(p => String(p.id) === String(id));
+        if (!person) return;
+
+        modalPersonId = person.id;
+        const isOwner = currentUser && person.user_id === currentUser.id;
+
+        const initials = (person.name || '?').split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('modalImgBox').innerHTML = person.avatar_url
+            ? `<img src="${escapeHtml(person.avatar_url)}" alt="${escapeHtml(person.name)}">`
+            : escapeHtml(initials);
+        document.getElementById('modalTitle').textContent = person.name;
+        document.getElementById('modalSubtitle').textContent = `${person.profession} (${person.experience})`;
+        document.getElementById('modalBody').innerHTML = `
+            <p><strong>Skills:</strong> ${escapeHtml(person.skills)}</p>
+            <p><strong>Bio:</strong></p>
+            <p>${escapeHtml(person.bio)}</p>
+        `;
+
+        // You can't "contact" yourself — show a delete option instead.
+        document.getElementById('modalContactBtn').style.display = isOwner ? 'none' : 'block';
+        document.getElementById('modalDeleteBtn').style.display = isOwner ? 'block' : 'none';
+
+        openModal('detailModal');
+    }
+
+    document.getElementById('modalContactBtn').addEventListener('click', () => {
+        alert('Contact Request Sent!');
+    });
+
+    document.getElementById('modalDeleteBtn').addEventListener('click', async () => {
+        if (!modalPersonId) return;
+        if (!confirm('Delete your candidate profile? This cannot be undone.')) return;
+
+        const { error } = await supabaseClient
+            .from('candidates')
+            .delete()
+            .eq('id', modalPersonId);
+
+        if (error) {
+            alert('Could not delete profile: ' + error.message);
+            return;
+        }
+
+        closeModal('detailModal');
+        refreshAndCacheCandidates();
+    });
+
+    /* Live preview for the profile-photo dropzone: swap the icon for
+       a thumbnail of the picked image and show its filename. */
+    const pAvatarInput = document.getElementById('pAvatar');
+    const pAvatarThumbImg = document.getElementById('pAvatarThumbImg');
+    const pAvatarThumbIcon = document.getElementById('pAvatarThumbIcon');
+    const pAvatarTitle = document.getElementById('pAvatarTitle');
+    const pAvatarSub = document.getElementById('pAvatarSub');
+
+    pAvatarInput.addEventListener('change', () => {
+        const file = pAvatarInput.files[0];
+        if (!file) return;
+        pAvatarThumbImg.src = URL.createObjectURL(file);
+        pAvatarThumbImg.style.display = 'block';
+        pAvatarThumbIcon.style.display = 'none';
+        pAvatarTitle.textContent = 'Photo selected';
+        pAvatarSub.textContent = file.name;
+    });
+
+    // Pulled out into its own function (instead of living only inside the
+    // click handler) so it can also run automatically when someone lands
+    // here via the "Post My Profile" link from the Jobs page.
+    function openPostProfileModal() {
+        postProfileError.style.display = 'none';
+
+        const existing = currentUser
+            ? loadedCandidates.find(p => p.user_id === currentUser.id)
+            : null;
+
+        const heading = document.getElementById('postProfileHeading');
+
+        if (existing) {
+            document.getElementById('pName').value = existing.name || '';
+            document.getElementById('pProfession').value = existing.profession || '';
+            document.getElementById('pExperience').value = existing.experience || '';
+            document.getElementById('pSkills').value = existing.skills || '';
+            document.getElementById('pBio').value = existing.bio || '';
+
+            if (existing.avatar_url) {
+                pAvatarThumbImg.src = existing.avatar_url;
+                pAvatarThumbImg.style.display = 'block';
+                pAvatarThumbIcon.style.display = 'none';
+                pAvatarTitle.textContent = 'Current photo';
+                pAvatarSub.textContent = 'Choose a new file to replace it';
+            } else {
+                pAvatarThumbImg.style.display = 'none';
+                pAvatarThumbIcon.style.display = 'block';
+                pAvatarTitle.textContent = 'Upload a photo';
+                pAvatarSub.textContent = 'JPG or PNG, up to 5MB';
+            }
+
+            heading.textContent = 'Edit My Profile';
+            submitProfileBtn.textContent = 'Save Changes';
+        } else {
+            ['pName', 'pProfession', 'pExperience', 'pSkills', 'pBio'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            pAvatarThumbImg.style.display = 'none';
+            pAvatarThumbIcon.style.display = 'block';
+            pAvatarTitle.textContent = 'Upload a photo';
+            pAvatarSub.textContent = 'JPG or PNG, up to 5MB';
+
+            heading.textContent = 'Post My Profile';
+            submitProfileBtn.textContent = 'Publish Profile';
+        }
+
+        // Clear the file input either way so a stale selection from a
+        // previous open doesn't get re-submitted by accident.
+        pAvatarInput.value = '';
+
+        openModal('postProfileModal');
+    }
+
+    postProfileBtn.addEventListener('click', openPostProfileModal);
+
+    postJobLinkBtn.addEventListener('click', () => {
+        window.location.href = 'jobs.html?post=1';
+    });
+
+    submitProfileBtn.addEventListener('click', async () => {
+        const name = document.getElementById('pName').value.trim();
+        const profession = document.getElementById('pProfession').value.trim();
+        const experience = document.getElementById('pExperience').value.trim();
+        const skills = document.getElementById('pSkills').value.trim();
+        const bio = document.getElementById('pBio').value.trim();
+
+        postProfileError.style.display = 'none';
+
+        if (!name || !profession || !experience || !skills || !bio) {
+            postProfileError.textContent = 'Please fill in every field.';
+            postProfileError.style.display = 'block';
+            return;
+        }
+
+        const avatarFile = document.getElementById('pAvatar').files[0];
+        submitProfileBtn.disabled = true;
+        submitProfileBtn.textContent = 'Publishing...';
+
+        let avatarUrl = null;
+        try {
+            if (avatarFile) {
+                avatarUrl = await uploadImage(avatarFile, 'candidates');
+            }
+        } catch (err) {
+            postProfileError.textContent = err.message;
+            postProfileError.style.display = 'block';
+            submitProfileBtn.disabled = false;
+            submitProfileBtn.textContent = 'Publish Profile';
+            return;
+        }
+
+        // If they're updating an existing profile and don't choose a new
+        // photo, keep whatever avatar_url is already saved instead of
+        // wiping it out.
+        const updatePayload = { name, profession, experience, skills, bio, user_id: currentUser.id };
+        if (avatarUrl) updatePayload.avatar_url = avatarUrl;
+
+        const { error } = await supabaseClient
+            .from('candidates')
+            .upsert(updatePayload, { onConflict: 'user_id' });
+
+        submitProfileBtn.disabled = false;
+        submitProfileBtn.textContent = 'Publish Profile';
+
+        if (error) {
+            postProfileError.textContent = error.message;
+            postProfileError.style.display = 'block';
+            return;
+        }
+
+        pAvatarInput.value = '';
+        pAvatarThumbImg.style.display = 'none';
+        pAvatarThumbIcon.style.display = 'block';
+        pAvatarTitle.textContent = 'Upload a photo';
+        pAvatarSub.textContent = 'JPG or PNG, up to 5MB';
+        closeModal('postProfileModal');
+        refreshAndCacheCandidates();
+    });
+
+    async function init() {
+        currentUser = await requireLogin();
+        if (!currentUser) return;
+
+        userPill.style.display = 'inline-block';
+        userPill.textContent = currentUser.email;
+
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+
+        currentRole = profile ? profile.role : null;
+
+        if (!currentRole) {
+            window.location.href = 'chooserole.html';
+            return;
+        }
+
+        // The action button in the header now follows your ROLE, not
+        // which page you happen to be browsing — a job seeker can post
+        // their profile from here, and an employer gets a one-click link
+        // over to post a job without having to find the tab first.
+        if (currentRole === 'jobseeker') {
+            postProfileBtn.style.display = 'inline-block';
+        } else if (currentRole === 'employer') {
+            postJobLinkBtn.style.display = 'inline-block';
+        }
+
+        await refreshAndCacheCandidates();
+
+        // If we were sent here by the "Post My Profile" link on the
+        // Jobs page, open the modal immediately instead of making the
+        // job seeker find and click the button again.
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('post') === '1' && currentRole === 'jobseeker') {
+            openPostProfileModal();
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
