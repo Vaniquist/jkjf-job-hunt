@@ -1022,7 +1022,19 @@
         }
 
         document.getElementById('modalApplyBtn').addEventListener('click', () => {
-            alert('Application Sent!');
+            const job = loadedJobs.find(j => String(j.id) === String(modalJobId));
+            if (!job) return;
+
+            if (!job.email) {
+                alert("This listing doesn't have a contact email on file.");
+                return;
+            }
+
+            const subject = encodeURIComponent(`Application: ${job.role} at ${job.company}`);
+            const body = encodeURIComponent(
+                `Hi,\n\nI'd like to apply for the ${job.role} position at ${job.company}.\n\n[Tell them a bit about yourself here]\n`
+            );
+            window.location.href = `mailto:${job.email}?subject=${subject}&body=${body}`;
         });
 
         document.getElementById('modalDeleteBtn').addEventListener('click', async () => {
@@ -1100,7 +1112,7 @@
 
             const { error } = await supabaseClient
                 .from('jobs')
-                .insert({ company, role, location, salary, description, logo_url: logoUrl, user_id: currentUser.id });
+                .insert({ company, role, location, salary, description, logo_url: logoUrl, user_id: currentUser.id, email: currentUser.email });
 
             submitJobBtn.disabled = false;
             submitJobBtn.textContent = 'Publish Listing';
@@ -1171,4 +1183,4 @@
         init();
     </script>
 </body>
-</html>
+    </html>
