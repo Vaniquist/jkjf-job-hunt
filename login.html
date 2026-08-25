@@ -46,7 +46,56 @@
     color: var(--text);
     transition: background 0.3s, color 0.3s;
     min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
   }
+
+  /* Soft blurred color blobs — decorative only, sit behind everything.
+     Same three brand colors already in the palette, just used as a
+     glow instead of flat fills, so light and dark mode both stay on-brand. */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    opacity: 0.35;
+    pointer-events: none;
+    animation: float 14s ease-in-out infinite;
+  }
+  [data-theme="dark"] .blob { opacity: 0.28; }
+
+  .blob-1 {
+    width: 340px;
+    height: 340px;
+    top: -120px;
+    right: -100px;
+    background: var(--primary);
+    animation-delay: 0s;
+  }
+  .blob-2 {
+    width: 300px;
+    height: 300px;
+    bottom: -100px;
+    left: -100px;
+    background: var(--secondary);
+    animation-delay: -5s;
+  }
+  .blob-3 {
+    width: 220px;
+    height: 220px;
+    bottom: 20%;
+    right: -80px;
+    background: var(--accent);
+    opacity: 0.22;
+    animation-delay: -9s;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-16px, 22px) scale(1.06); }
+  }
+
+  [data-theme="dark"] .blob-3 { opacity: 0.16; }
 
   :focus-visible {
     outline: 2px solid var(--accent);
@@ -83,11 +132,24 @@
     font-family: 'Space Grotesk', sans-serif;
     font-size: 23px;
     font-weight: 800;
-    color: var(--text);
+    background: linear-gradient(135deg, var(--text) 0%, var(--text) 60%, var(--primary) 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
     letter-spacing: -0.03em;
   }
 
-  .logo .dot { color: var(--accent); }
+  .logo .dot {
+    color: var(--accent);
+    -webkit-text-fill-color: var(--accent);
+    display: inline-block;
+    animation: pulse-dot 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.7; }
+  }
 
   .burger {
     width: 42px;
@@ -225,10 +287,19 @@
     background: var(--card);
     padding: 35px 30px;
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 0 0 1px var(--border);
     max-width: 420px;
     margin: 40px auto;
     border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .form-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
   }
   .form-tabs {
     display: flex;
@@ -240,11 +311,13 @@
     padding: 12px;
     background: none;
     border: none;
+    border-bottom: 3px solid transparent;
     cursor: pointer;
     color: var(--text);
     font-weight: 700;
     font-size: 15px;
     opacity: 0.6;
+    transition: opacity 0.2s ease, border-color 0.25s ease, color 0.25s ease;
   }
   .tab.active {
     opacity: 1;
@@ -261,9 +334,49 @@
     color: var(--text);
     outline: none;
     font-size: 15px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .form-box input:focus {
     border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+
+  .password-wrap {
+    position: relative;
+  }
+  .password-wrap input {
+    padding-right: 46px;
+  }
+  .eye-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text);
+    opacity: 0.55;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  .eye-btn:hover {
+    opacity: 0.9;
+    background: var(--hover-bg);
+  }
+  .eye-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .btn {
     width: 100%;
@@ -276,10 +389,15 @@
     font-weight: 700;
     font-size: 15px;
     margin-top: 12px;
-    transition: opacity 0.2s, transform 0.15s;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px -4px rgba(37, 99, 235, 0.4);
   }
-  .btn:disabled { opacity: 0.6; cursor: default; }
-  .btn:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.6; cursor: default; box-shadow: none; }
+  .btn:hover:not(:disabled) {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.5);
+  }
   .error { color: #ef4444; text-align: center; margin-top: 12px; font-size: 14px; display: none; }
   .info { color: var(--secondary); text-align: center; margin-top: 12px; font-size: 14px; display: none; }
 
@@ -289,6 +407,10 @@
 </style>
 </head>
 <body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
 
 <nav id="siteNav">
   <div class="nav-left">
@@ -333,14 +455,24 @@
 
     <form id="loginForm" onsubmit="handleLogin(event)">
       <input type="email" id="loginEmail" placeholder="Email" required>
-      <input type="password" id="loginPass" placeholder="Password" required>
+      <div class="password-wrap">
+        <input type="password" id="loginPass" placeholder="Password" required>
+        <button type="button" class="eye-btn" onclick="togglePassword('loginPass', this)" aria-label="Show password">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <button type="submit" class="btn" id="loginBtn">LOGIN</button>
       <p id="loginError" class="error"></p>
     </form>
 
     <form id="signupForm" style="display:none;" onsubmit="handleSignup(event)">
       <input type="email" id="signupEmail" placeholder="Email" required>
-      <input type="password" id="signupPass" placeholder="Create Password (6+ characters)" required>
+      <div class="password-wrap">
+        <input type="password" id="signupPass" placeholder="Create Password (6+ characters)" required>
+        <button type="button" class="eye-btn" onclick="togglePassword('signupPass', this)" aria-label="Show password">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <button type="submit" class="btn" id="signupBtn">SIGN UP</button>
       <p id="signupError" class="error"></p>
       <p id="signupInfo" class="info"></p>
@@ -359,6 +491,16 @@
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) window.location.href = NEXT_PAGE_URL;
   })();
+
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    btn.innerHTML = showing
+      ? '<svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-4.22 5.94M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  }
 
   function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('active');
@@ -495,4 +637,4 @@
 </script>
 
 </body>
-</html>
+  </html>
