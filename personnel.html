@@ -1026,7 +1026,19 @@
     }
 
     document.getElementById('modalContactBtn').addEventListener('click', () => {
-        alert('Contact Request Sent!');
+        const person = loadedCandidates.find(p => String(p.id) === String(modalPersonId));
+        if (!person) return;
+
+        if (!person.email) {
+            alert("This profile doesn't have a contact email on file.");
+            return;
+        }
+
+        const subject = encodeURIComponent(`Job Opportunity for ${person.name}`);
+        const body = encodeURIComponent(
+            `Hi ${person.name},\n\nI came across your profile on JKJF Job Hunt and wanted to reach out.\n\n[Tell them about the opportunity here]\n`
+        );
+        window.location.href = `mailto:${person.email}?subject=${subject}&body=${body}`;
     });
 
     document.getElementById('modalDeleteBtn').addEventListener('click', async () => {
@@ -1160,7 +1172,7 @@
         // If they're updating an existing profile and don't choose a new
         // photo, keep whatever avatar_url is already saved instead of
         // wiping it out.
-        const updatePayload = { name, profession, experience, skills, bio, user_id: currentUser.id };
+        const updatePayload = { name, profession, experience, skills, bio, user_id: currentUser.id, email: currentUser.email };
         if (avatarUrl) updatePayload.avatar_url = avatarUrl;
 
         const { error } = await supabaseClient
