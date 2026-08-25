@@ -57,6 +57,29 @@
             color: var(--text);
             padding-top: 80px;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.35;
+            pointer-events: none;
+            animation: float 14s ease-in-out infinite;
+        }
+        [data-theme="dark"] .blob { opacity: 0.28; }
+
+        .blob-1 { width: 340px; height: 340px; top: -120px; right: -100px; background: var(--primary); }
+        .blob-2 { width: 300px; height: 300px; bottom: -100px; left: -100px; background: var(--secondary); animation-delay: -5s; }
+        .blob-3 { width: 220px; height: 220px; bottom: 20%; right: -80px; background: var(--accent); opacity: 0.22; animation-delay: -9s; }
+        [data-theme="dark"] .blob-3 { opacity: 0.16; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-16px, 22px) scale(1.06); }
         }
 
         /* On narrow screens the logo text and the header action button
@@ -131,14 +154,25 @@
             font-family: 'Space Grotesk', sans-serif;
             font-size: 1.4rem;
             font-weight: 800;
-            color: var(--text);
+            background: linear-gradient(135deg, var(--text) 0%, var(--text) 60%, var(--primary) 130%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             letter-spacing: -0.03em;
             text-decoration: none;
         }
 
         .site-name .dot {
             color: var(--accent);
+            -webkit-text-fill-color: var(--accent);
             font-size: 1.5rem;
+            display: inline-block;
+            animation: pulse-dot 2.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.7; }
         }
 
         .burger-btn {
@@ -379,6 +413,7 @@
         .card:hover {
             transform: translateY(-2px);
             border-color: var(--accent);
+            box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.25);
         }
 
         .card-image-box {
@@ -682,6 +717,11 @@
     </style>
 </head>
 <body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
 
     <header id="siteHeader">
         <div class="header-left">
